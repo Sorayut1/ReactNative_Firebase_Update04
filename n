@@ -1,0 +1,324 @@
+import React, { Component,useState } from 'react';
+import { StyleSheet, ScrollView, ActivityIndicator, View } from 'react-native';
+import { ThemeProvider, Button, Text, Input, Image } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import RNPickerSelect from 'react-native-picker-select';
+import { firebase } from '../database/firebaseDb';
+import { CheckBox } from 'react-native-elements';
+
+class AddUserScreen extends Component {
+    
+    constructor() {
+        super();
+
+        this.dbRef = firebase.firestore().collection('react-native-crud');
+        this.state = {
+            name_song: "",
+            artist: "",
+            Year_published: "",
+            band: "",
+            detail: "",
+            link: "",
+            data:["",""],
+            
+            isLoading: false,
+            selectedValue: null
+        }
+
+    }
+
+    inputValueUpdate = (val, prop) => {
+        const state = this.state;
+        state[prop] = val;
+        this.setState(state);
+    }
+
+    handleCheck1 = () => {
+        this.setState({
+            isSelected1: true,
+            isSelected2: false,
+            Year_published: 'ชาย'
+        });
+    };
+  
+    handleCheck2 = () => {
+        this.setState({
+            isSelected1: false,
+            isSelected2: true,
+            Year_published: 'หญิง'
+        });
+    };
+
+    storeUser() {
+        if (this.state.name_song == '') {
+            alert('Fill at least the song name!');
+        } else {
+            this.setState({
+                isLoading: true
+            })
+            this.dbRef.add({
+                name_song: this.state.name_song,
+                artist: this.state.artist,
+                Year_published: this.state.Year_published, // ใช้ค่า Year_published ที่ถูกเลือกจาก CheckBox
+                band: this.state.selectedValue,
+                detail: this.state.detail,
+                link: this.state.link,
+                data:[
+                    this.state.numberViews,this.state.topLike
+                ]
+            }).then((res) => {
+                this.setState({
+                    name_song: '',
+                    artist: '',
+                    Year_published: '',
+                    band: '',
+                    detail: '',
+                    link: '',
+                    data:['',''],
+                    selectedValue: null, 
+                    isLoading: false
+                })
+                this.props.navigation.navigate('UserScreen');
+            })
+            .catch((err) => {
+                console.log('Error found: ', err);
+                this.setState({
+                    isLoading: false
+                })
+            })
+        }
+    }
+    
+    
+      
+       
+    render() {
+        if (this.state.isLoading) {
+            return (
+                <View style={styles.preloader}>
+                    <ActivityIndicator size="large" color="#9E9E9E" />
+                </View>
+            )
+        }
+    
+       
+  
+
+    const placeholder = {
+      label: 'Select a band...',
+      value: null,
+    };
+  
+    const options = [
+        { label: 'Rock', value: 'Rock' },
+        { label: 'Pop', value: 'Pop' },
+        { label: 'Electronic', value: 'Electronic' },
+        { label: 'Indie', value: 'Indie' },
+        { label: 'R&B', value: 'R&B' },
+        { label: 'Metal', value: 'Metal' },
+        { label: 'Country', value: 'Country' },
+        { label: 'Jazz', value: 'Jazz' },
+        { label: 'Classical', value: 'Classical' },
+        { label: 'Hip Hop', value: 'Hip Hop' },
+    ];
+        return(
+            <View style={styles.container}>
+                <ScrollView >
+                    
+                    <Text>ชื่อเพลง :</Text>
+                    <Input 
+                        leftIcon={
+                            <Icon 
+                                name='user-o'
+                                size={20}
+                                color='#0085E6'
+                            />
+                        }
+                        placeholder={'  ชื่อเพลง'}
+                        value={this.state.name_song}
+                        onChangeText={(val) => this.inputValueUpdate(val, 'name_song')}
+                    />
+                    <Text>ชื่อผู้แต่ง :</Text>
+                    <Input 
+                        leftIcon={
+                            <Icon 
+                                name='envelope-o'
+                                size={20}
+                                color='#0085E6'
+                            />
+                        }
+                        placeholder={'  ชื่อผู้แต่ง'}
+                        value={this.state.artist}
+                        onChangeText={(val) => this.inputValueUpdate(val, 'artist')}
+                    />
+                    <Text>วงดนตรี :</Text>
+                    <RNPickerSelect
+                        placeholder={placeholder}
+                        items={options}
+                        onValueChange={(value) => this.setState({ selectedValue: value })}
+                        value={this.state.selectedValue}
+                        style={pickerSelectStyles}
+                    />
+                    <Text>เพศ :</Text>
+                    <CheckBox
+                        checked={this.state.isSelected1}
+                        onPress={this.handleCheck1}
+                        title={"ชาย"}
+                    />
+                    <CheckBox
+                        checked={this.state.isSelected2}
+                        onPress={this.handleCheck2}
+                        title={"หญิง"}
+                    />
+                    
+                    <Text>รายละเอียด :</Text>
+                    <Input 
+                        leftIcon={
+                            <Icon 
+                                name='envelope-o'
+                                size={20}
+                                color='#0085E6'
+                            />
+                        }
+                        placeholder={'  รายละเอียด'}
+                        value={this.state.detail}
+                        onChangeText={(val) => this.inputValueUpdate(val, 'detail')}
+                    />
+                   
+                    <Image
+                        source={{ uri: this.state.link }}
+                        style={{ width: 200, height: 200, alignSelf: 'center' }}
+                        containerStyle={{ marginLeft: 'auto', marginRight: 'auto' }}
+                    />
+                     <Text>Link รูปภาพ :</Text>
+                    <Input 
+                        leftIcon={
+                            <Icon 
+                                name='mobile'
+                                size={30}
+                                color='#0085E6'
+                            />
+                        }
+                        placeholder={'  Link รูปภาพ'}
+                        value={this.state.link}
+                        onChangeText={(val) => this.inputValueUpdate(val, 'link')}
+                    />
+                    <Text>ยอดวิว :</Text>
+                    <Input 
+                        leftIcon={
+                            <Icon 
+                                name='mobile'
+                                size={30}
+                                color='#0085E6'
+                            />
+                        }
+                        placeholder={'  ยอดวิว'}
+                        value={this.state.numberViews}
+                        onChangeText={(val) => this.inputValueUpdate(val, 'numberViews')}
+                    />
+                    <Text>ยอดไลค์ :</Text>
+                    <Input 
+                        leftIcon={
+                            <Icon 
+                                name='mobile'
+                                size={30}
+                                color='#0085E6'
+                            />
+                        }
+                        placeholder={'  ยอดไลค์'}
+                        value={this.state.topLike}
+                        onChangeText={(val) => this.inputValueUpdate(val, 'topLike')}
+                    />
+                    <Button 
+                        icon={
+                            <Icon 
+                                name='check'
+                                size={15}
+                                color='white'
+                            />
+                        }
+                        title='  เพิ่มเพลง'
+                        buttonStyle={{
+                            backgroundColor: "green"
+                        }}
+                        onPress={() => this.storeUser()}
+                    />
+                    <Button 
+                        icon={
+                            <Icon 
+                                name='users'
+                                size={15}
+                                color='white'
+                            />
+                        }
+                        title='  เพลงทั้งหมด'
+                        onPress={() => this.props.navigation.navigate('UserScreen')}
+                        containerStyle={{
+                            marginTop: 10
+                        }}
+                    />
+                    
+                </ScrollView>
+            </View>
+        )
+    }
+}
+
+const theme = {
+    Button: {
+        raised: true
+    }
+}
+
+const pickerSelectStyles = StyleSheet.create({
+    inputIOS: {
+      fontSize: 16,
+      paddingVertical: 12,
+      paddingHorizontal: 10,
+      borderWidth: 1,
+      borderColor: 'gray',
+      borderRadius: 4,
+      color: 'black',
+      paddingRight: 30, // to ensure the text is never behind the icon
+    },
+    inputAndroid: {
+      fontSize: 16,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      borderWidth: 0.5,
+      borderColor: 'purple',
+      borderRadius: 8,
+      color: 'black',
+      paddingRight: 30, // to ensure the text is never behind the icon
+    },
+  });
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        padding: 10,
+        overflowY: 'scroll',
+        marginVertical: 20,
+        paddingHorizontal: 20,
+    },
+    preloader: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+      label: {
+        fontSize: 16,
+        marginBottom: 10,
+      },
+      selectedText: {
+        marginTop: 10,
+        fontSize: 16,
+        fontWeight: 'bold',
+      },
+})
+
+export default AddUserScreen;
